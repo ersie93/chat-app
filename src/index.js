@@ -17,8 +17,13 @@ app.use(express.static(publicDirectoryPath))
 io.on('connection', (socket) => {
   console.log('new connection!!')
 
-  socket.emit('message', generateMessage('Welcome!'))
-  socket.broadcast.emit('message', generateMessage('a new user has joined!'))
+  socket.on('join', ({username, room}) => {
+    socket.join(room)
+
+    socket.emit('message', generateMessage('Welcome!'))
+    socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`))
+
+  })
 
   socket.on("sendMessage", (message, callback) => {
     const filter = new Filter()
@@ -26,7 +31,7 @@ io.on('connection', (socket) => {
     if(filter.isProfane(message)){
       return callback('Profanity is not allowed!')
     }
-    io.emit("message", generateMessage(message))
+    io.to('1').emit("message", generateMessage(message))
     callback()
   })
 
